@@ -32,23 +32,41 @@ def fetch_data(year):
         LR_url = row[15]
         zoopla_address = address + ', ' + town + ', ' + \
             postcode  # '37 Talbot Road, Hatfield, AL10 0RA'
-        zoopla_address_url = "https://www.zoopla.co.uk/house-prices/hertfordshire/hatfield/talbot-road/?q=%s&search_source=house-prices&yr=315623" % zoopla_address
+        zoopla_address_url = "https://www.zoopla.co.uk/search/?q=%s&geo_autocomplete_identifier=&search_source=house-prices&section=house-prices&view_type=list" % zoopla_address
         zoopla_address_page = requests.get(zoopla_address_url)
         print(zoopla_address_url)
         soup = BeautifulSoup(zoopla_address_page.text, 'html.parser')
-        zoopla_url = 'https://www.zoopla.co.uk' + \
-            soup.select(
-                ".yourresult .browse-cell-address a")[0].get_attribute_list('href')[0]
+        try:
+            zoopla_url = 'https://www.zoopla.co.uk' + \
+                soup.select(
+                    ".yourresult .browse-cell-address a")[0].get_attribute_list('href')[0]
+        except Exception as e:
+            try:
+                zoopla_url = 'https://www.zoopla.co.uk' + \
+                    soup.select(
+                        "tr .browse-cell-address a")[0].get_attribute_list('href')[0]
+            except Exception as e:
+                continue
+        print(zoopla_url)
         zoopla_page = requests.get(zoopla_url)
         soup = BeautifulSoup(zoopla_page.text, 'html.parser')
-        zoopla_beds = soup.select(".ui-list-flat li.ui-property-spec__item")[
-            0].get_text().replace('\n', '').replace('bedrooms', '').strip()
-        zoopla_baths = soup.select(".ui-list-flat li.ui-property-spec__item")[
-            1].get_text().replace('\n', '').replace('bathrooms', '').strip()
-        zoopla_living = soup.select(".ui-list-flat li.ui-property-spec__item")[
-            2].get_text().replace('\n', '').replace('receptions', '').strip()
-        zoopla_agent = soup.select(
-            "small.pdp-history__marketed-by strong")[0].get_text().replace('\n', '').strip()
+        try:
+            zoopla_beds = soup.select(".ui-list-flat li.ui-property-spec__item")[
+                0].get_text().replace('\n', '').replace('bedrooms', '').strip()
+            zoopla_baths = soup.select(".ui-list-flat li.ui-property-spec__item")[
+                1].get_text().replace('\n', '').replace('bathrooms', '').strip()
+            zoopla_living = soup.select(".ui-list-flat li.ui-property-spec__item")[
+                2].get_text().replace('\n', '').replace('receptions', '').strip()
+        except Exception as e:
+            zoopla_beds = 0
+            zoopla_baths = 0
+            zoopla_living = 0
+        try:
+            zoopla_agent = soup.select(
+                "small.pdp-history__marketed-by strong")[0].get_text().replace('\n', '').strip()
+        except Exception as e:
+            zoopla_agent = ''
+
         rightmove_address = address + ' ' + town + ' ' + \
             postcode  # "37 Talbot Road Hatfield AL10 0RA"
         rightmove_address_url = "https://www.rightmove.co.uk/house-prices/search.html?searchLocation=%s&showMapView=&locationIdentifier=&referrer=landingPage&housePrices=List View" % rightmove_address
